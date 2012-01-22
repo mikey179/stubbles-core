@@ -212,7 +212,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function setsTimeoutOnConnect()
     {
-        $mockfp = 'mocked connection pointer';
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->with($this->equalTo('example.com'), $this->equalTo(303))
@@ -222,6 +222,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
                            ->with($this->equalTo($mockfp), $this->equalTo(5));
         $socket = new Socket('example.com', 303);
         $socket->connect();
+        fclose($mockfp);
     }
 
     /**
@@ -229,14 +230,14 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function connectDoesNotConnectAgainIfAlreadyConnected()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $socket->connect();
-        fclose($mockfp);
+        $socket->connect()
+               ->connect();
+        \fclose($mockfp);
     }
 
     /**
@@ -244,17 +245,17 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function disconnectClosesConnection()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
-        $socket = new Socket('example.com');
-        $socket->connect();
         $fclose = $this->getFunctionMock('fclose', __NAMESPACE__);
-        $fclose->expects($this->atLeastOnce())
+        $fclose->expects($this->once())
                ->with($mockfp);
-        $socket->disconnect();
-        fclose($mockfp);
+        $socket = new Socket('example.com');
+        $socket->connect()
+               ->disconnect();
+        \fclose($mockfp);
     }
 
     /**
@@ -262,7 +263,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function setTimeoutChangesTimeoutOfAlreadyOpenedConnection()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -272,9 +273,9 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
         $socket_set_timeout->expects($this->at(1))
                            ->with($this->equalTo($mockfp), $this->equalTo(2));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $socket->setTimeout(2);
-        fclose($mockfp);
+        $socket->connect()
+               ->setTimeout(2);
+        \fclose($mockfp);
     }
 
     /**
@@ -283,7 +284,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function failureWhileReadingThrowsConnectionException()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -294,9 +295,9 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
         $feof->expects(($this->once()))
              ->will($this->returnValue(false));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $socket->read();
-        fclose($mockfp);
+        $socket->connect()
+               ->read();
+        \fclose($mockfp);
     }
 
     /**
@@ -304,7 +305,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function readEndOfSocketReturnsNull()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -315,9 +316,8 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
         $feof->expects(($this->once()))
              ->will($this->returnValue(true));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $this->assertNull($socket->read());
-        fclose($mockfp);
+        $this->assertNull($socket->connect()->read());
+        \fclose($mockfp);
     }
 
     /**
@@ -325,7 +325,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function returnsDataReadFromSocket()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -333,9 +333,8 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
         $fgets->expects(($this->once()))
               ->will($this->returnValue('some data'));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $this->assertEquals('some data', $socket->read());
-        fclose($mockfp);
+        $this->assertEquals('some data', $socket->connect()->read());
+        \fclose($mockfp);
     }
 
     /**
@@ -344,7 +343,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function failureWhileReadingBinaryThrowsConnectionException()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -352,9 +351,9 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
         $fread->expects(($this->once()))
               ->will($this->returnValue(false));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $socket->readBinary();
-        fclose($mockfp);
+        $socket->connect()
+               ->readBinary();
+        \fclose($mockfp);
     }
 
     /**
@@ -362,7 +361,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function returnsBinaryDataReadFromSocket()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -370,9 +369,8 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
         $fread->expects(($this->once()))
               ->will($this->returnValue('some data'));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $this->assertEquals('some data', $socket->readBinary());
-        fclose($mockfp);
+        $this->assertEquals('some data', $socket->connect()->readBinary());
+        \fclose($mockfp);
     }
 
     /**
@@ -381,7 +379,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function failureWhileWritingThrowsConnectionException()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -390,9 +388,9 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
               ->with($this->equalTo($mockfp), $this->equalTo('some data'), $this->equalTo(9))
               ->will($this->returnValue(false));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $socket->write('some data');
-        fclose($mockfp);
+        $socket->connect()
+               ->write('some data');
+        \fclose($mockfp);
     }
 
     /**
@@ -400,7 +398,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
      */
     public function writeDataToSocket()
     {
-        $mockfp = fopen(__FILE__, 'r');
+        $mockfp    = \fopen(__FILE__, 'r');
         $fsockopen = $this->getFunctionMock('fsockopen', __NAMESPACE__);
         $fsockopen->expects($this->once())
                   ->will($this->returnValue($mockfp));
@@ -409,9 +407,8 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
               ->with($this->equalTo($mockfp), $this->equalTo('some data'), $this->equalTo(9))
               ->will($this->returnValue(9));
         $socket = new Socket('example.com');
-        $socket->connect();
-        $this->assertEquals(9, $socket->write('some data'));
-        fclose($mockfp);
+        $this->assertEquals(9, $socket->connect()->write('some data'));
+        \fclose($mockfp);
     }
 }
 ?>

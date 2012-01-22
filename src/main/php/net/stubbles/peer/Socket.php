@@ -80,13 +80,13 @@ class Socket extends BaseObject
      * opens a connection to host
      *
      * @param   int  $connectTimeout  timeout for establishing the connection
-     * @return  bool  true if connect was successful
+     * @return  Socket
      * @throws  ConnectionException
      */
     public function connect($connectTimeout = 2)
     {
         if ($this->isConnected()) {
-            return true;
+            return $this;
         }
 
         $errno    = 0;
@@ -98,7 +98,7 @@ class Socket extends BaseObject
         }
 
         socket_set_timeout($this->fp, $this->timeout, 0);
-        return true;
+        return $this;
     }
 
     /**
