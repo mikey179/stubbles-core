@@ -97,7 +97,7 @@ class Socket extends BaseObject
             throw new ConnectionException('Connecting to ' . $this->prefix . $this->host . ':' . $this->port . ' within ' . $connectTimeout . ' seconds failed: ' . $errstr . ' (' . $errno . ').');
         }
 
-        socket_set_timeout($this->fp, $this->timeout);
+        socket_set_timeout($this->fp, $this->timeout, 0);
         return true;
     }
 
@@ -126,7 +126,7 @@ class Socket extends BaseObject
     {
         $this->timeout = $timeout;
         if ($this->isConnected()) {
-            socket_set_timeout($this->fp, $this->timeout);
+            socket_set_timeout($this->fp, $this->timeout, 0);
         }
 
         return $this;
