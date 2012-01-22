@@ -222,7 +222,7 @@ class SocketTestCase extends \PHPUnit_Framework_TestCase
                            ->with($this->equalTo($mockfp), $this->equalTo(5));
         $socket = new Socket('example.com', 303);
         $socket->connect();
-        fclose($mockfp);
+        \fclose($mockfp);
     }
 
     /**
